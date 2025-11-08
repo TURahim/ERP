@@ -3,6 +3,7 @@
 import { useForm, useFieldArray } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
+import { useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
@@ -10,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useCustomers } from "@/lib/hooks/useCustomers"
+import { Plus, Trash2 } from "lucide-react"
 import { formatCurrency } from "@/lib/utils/formatting"
 import type { Invoice, InvoiceLineItem } from "@/lib/types"
 
@@ -69,20 +71,37 @@ export function InvoiceForm({ initialData, onSubmit, isLoading = false }: Invoic
   const watchedLineItems = form.watch("lineItems")
   const watchedDiscount = form.watch("discount") || 0
 
-  // Auto-calculate line item amounts and total
-  const calculateLineItemAmount = (index: number) => {
+  // Memoize the dependency string to prevent unnecessary re-renders
+  const lineItemsKey = useMemo(() => {
+    return watchedLineItems.map((item, idx) => `${idx}-${item.quantity}-${item.unitPrice}`).join('|')
+  }, [watchedLineItems])
+
+  // Update line item amounts when quantity or unitPrice changes
+  const updateLineItemAmount = (index: number) => {
     const item = watchedLineItems[index]
     if (item) {
       const amount = item.quantity * item.unitPrice
-      form.setValue(`lineItems.${index}.amount`, amount)
-      return amount
+      form.setValue(`lineItems.${index}.amount`, amount, { shouldValidate: false })
     }
-    return 0
   }
 
-  const subtotal = watchedLineItems.reduce((sum, item, index) => {
-    const amount = calculateLineItemAmount(index)
-    return sum + amount
+  // Auto-update amounts when line items change
+  useEffect(() => {
+    watchedLineItems.forEach((item, index) => {
+      if (item && typeof item.quantity === 'number' && typeof item.unitPrice === 'number') {
+        const calculatedAmount = item.quantity * item.unitPrice
+        const currentAmount = form.getValues(`lineItems.${index}.amount`)
+        if (Math.abs(currentAmount - calculatedAmount) > 0.01) {
+          form.setValue(`lineItems.${index}.amount`, calculatedAmount, { shouldValidate: false, shouldDirty: false })
+        }
+      }
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lineItemsKey])
+
+  // Calculate subtotal from watched values (no setValue during render)
+  const subtotal = watchedLineItems.reduce((sum, item) => {
+    return sum + (item.quantity * item.unitPrice)
   }, 0)
 
   const total = Math.max(0, subtotal - watchedDiscount)
@@ -165,32 +184,8 @@ export function InvoiceForm({ initialData, onSubmit, isLoading = false }: Invoic
                               step="0.01"
                               {...field}
                               onChange={(e) => {
-                                field.onChange(parseFloat(e.target.value) || 0)
-                                calculateLineItemAmount(index)
-                              }}
-                              disabled={isLoading}
-                              className="rounded-md"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name={`lineItems.${index}.unitPrice`}
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="sr-only">Unit Price</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              {...field}
-                              onChange={(e) => {
-                                field.onChange(parseFloat(e.target.value) || 0)
-                                calculateLineItemAmount(index)
+                                const value = parseFloat(e.target.value) || 0
+                                field.onChange(value)
                               }}
                               disabled={isLoading}
                               className="rounded-md"
@@ -202,7 +197,7 @@ export function InvoiceForm({ initialData, onSubmit, isLoading = false }: Invoic
                     />
                     <div className="flex items-center gap-2">
                       <div className="text-sm font-medium min-w-[80px] text-right">
-                        {formatCurrency(watchedLineItems[index]?.amount || 0)}
+                        {formatCurrency((watchedLineItems[index]?.quantity || 0) * (watchedLineItems[index]?.unitPrice || 0))}
                       </div>
                       {fields.length > 1 && (
                         <Button

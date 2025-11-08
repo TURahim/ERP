@@ -13,6 +13,7 @@ import type {
   ApiResponse,
 } from "@/lib/types"
 import { mockServices } from "@/lib/services/mockApi"
+import { realServices } from "@/lib/services/realApi"
 
 export interface CustomerService {
   list(params: { page: number; size: number; includeInactive?: boolean }): Promise<ApiResponse<Customer[]>>
@@ -56,13 +57,12 @@ export function useService<Name extends keyof ServiceRegistry>(name: Name): Serv
   return services[name]
 }
 
-// Client-side wrapper that initializes services
+// Client-side wrapper that initializes services based on environment variable
 // This component must be used in client components to avoid passing functions from server to client
-// By importing mockServices directly in this client component, we avoid serialization issues
 export function ServiceProviderWrapper({ children }: PropsWithChildren) {
-  // Import services directly in client component - this is safe because:
-  // 1. This is a client component ("use client")
-  // 2. mockServices is just an object with functions, which is fine in client components
-  // 3. We're not passing it from a server component anymore
-  return <ServiceContext.Provider value={mockServices}>{children}</ServiceContext.Provider>
+  // Check if we should use mock API or real API
+  const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
+  const services = useMockApi ? mockServices : realServices
+
+  return <ServiceContext.Provider value={services}>{children}</ServiceContext.Provider>
 }

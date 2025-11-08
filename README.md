@@ -290,14 +290,20 @@ interface Payment {
 
 ### Switching to Real Backend
 
-1. **Create real API service** implementing `IServiceRegistry` interface
-2. **Update ServiceProvider import** in `app/layout.tsx`:
-   \`\`\`tsx
-   import { realServices } from "@/lib/services/realApi"
-   // Change from: mockServices to: realServices
-   \`\`\`
-3. **Update environment variables** with real API URLs
-4. **All components automatically use real API** - no changes needed!
+The frontend now supports both mock API and real backend API. Switching between them is controlled by environment variables.
+
+**To use Mock API (default):**
+1. Set `NEXT_PUBLIC_USE_MOCK_API=true` in `.env.local`
+2. No backend required - works out of the box
+
+**To use Real Backend API:**
+1. Ensure backend is running on `http://localhost:8080` (or configure `NEXT_PUBLIC_API_BASE_URL`)
+2. Set `NEXT_PUBLIC_USE_MOCK_API=false` in `.env.local`
+3. Set `NEXT_PUBLIC_API_BASE_URL=http://localhost:8080` (if different from default)
+4. Set `NEXT_PUBLIC_API_KEY=demo-api-key-12345` (or your API key)
+5. Restart the Next.js dev server
+
+The `ServiceProviderWrapper` automatically selects the correct service implementation based on `NEXT_PUBLIC_USE_MOCK_API`. No code changes needed!
 
 ---
 
@@ -493,11 +499,12 @@ All located in `lib/hooks/useCustomers.ts`:
 Create `.env.local` (copy from `.env.example`):
 
 \`\`\`env
-# Backend API (for future integration)
-NEXT_PUBLIC_API_URL=http://localhost:3001
+# API Mode: Set to "true" to use mock API, "false" to use real backend
+NEXT_PUBLIC_USE_MOCK_API=true
 
-# Authentication (if using real auth provider)
-# NEXT_PUBLIC_AUTH_URL=...
+# Backend API Configuration (only used when NEXT_PUBLIC_USE_MOCK_API=false)
+NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+NEXT_PUBLIC_API_KEY=demo-api-key-12345
 
 # Analytics (optional)
 NEXT_PUBLIC_VERCEL_ANALYTICS_ID=...
@@ -505,13 +512,56 @@ NEXT_PUBLIC_VERCEL_ANALYTICS_ID=...
 
 ### Available Variables
 
-| Variable | Type | Purpose |
-|----------|------|---------|
-| `NEXT_PUBLIC_API_URL` | string | Backend API endpoint |
-| `NEXT_PUBLIC_DEV_MODE` | boolean | Demo mode indicator |
-| `NODE_ENV` | string | Environment (development/production) |
+| Variable | Type | Purpose | Default |
+|----------|------|---------|---------|
+| `NEXT_PUBLIC_USE_MOCK_API` | boolean | Use mock API instead of real backend | `true` |
+| `NEXT_PUBLIC_API_BASE_URL` | string | Backend API endpoint | `http://localhost:8080` |
+| `NEXT_PUBLIC_API_KEY` | string | API key for backend authentication | `demo-api-key-12345` |
+| `NODE_ENV` | string | Environment (development/production) | - |
 
 **Note**: Variables prefixed with `NEXT_PUBLIC_` are exposed to the browser. Never expose secrets!
+
+### Backend Setup
+
+To connect to the real backend:
+
+1. **Start the backend server**:
+   
+   **Option A: Using Maven (if installed):**
+   \`\`\`bash
+   cd ../backend
+   mvn spring-boot:run
+   \`\`\`
+   
+   **Option B: Install Maven first (if not installed):**
+   - macOS: `brew install maven`
+   - Or download from: https://maven.apache.org/download.cgi
+   
+   The backend runs on `http://localhost:8080` by default.
+   
+   **Note:** The backend directory is at the same level as the ERP frontend directory (`ERP_project/backend`).
+
+2. **Update `.env.local`**:
+   \`\`\`env
+   NEXT_PUBLIC_USE_MOCK_API=false
+   NEXT_PUBLIC_API_BASE_URL=http://localhost:8080
+   NEXT_PUBLIC_API_KEY=demo-api-key-12345
+   \`\`\`
+
+3. **Seed demo data** (optional but recommended):
+   \`\`\`bash
+   npm run seed:demo
+   \`\`\`
+   This creates 8 customers, ~20 invoices, and multiple payments for demo purposes.
+   
+   **Note:** Make sure the backend is running before seeding. The script will connect to `http://localhost:8080` by default.
+
+4. **Restart the Next.js dev server**:
+   \`\`\`bash
+   npm run dev
+   \`\`\`
+
+The frontend will automatically use the real backend API. All existing components and hooks work without changes!
 
 ---
 
@@ -647,14 +697,34 @@ vercel deploy
 
 ---
 
-## Next Steps for Backend Integration
+## Backend Integration Status
 
-1. **Implement real API** matching `IServiceRegistry` interface
-2. **Create real authentication** (Supabase, NextAuth, etc.)
-3. **Update environment variables** with real endpoints
-4. **Create database migrations** for Customers, Invoices, Payments
-5. **Test all data flows** with real backend
-6. **Enable production build**: `npm run build && npm start`
+✅ **Backend Integration Complete!**
+
+The frontend is now fully integrated with the backend API. You can switch between mock and real API modes using environment variables.
+
+### What's Integrated
+
+- ✅ Customer CRUD operations
+- ✅ Invoice CRUD operations  
+- ✅ Invoice lifecycle (send invoice)
+- ✅ Payment recording
+- ✅ Real-time balance updates
+- ✅ Error handling for backend errors
+- ✅ Automatic service switching (mock ↔ real)
+
+### Testing with Real Backend
+
+1. Start the backend server (see backend README)
+2. Set `NEXT_PUBLIC_USE_MOCK_API=false` in `.env.local`
+3. Restart the frontend dev server
+4. Test all CRUD operations - they now use the real backend!
+
+### Next Steps
+
+- [ ] Add end-to-end tests (INT-020)
+- [ ] Set up CI/CD pipeline
+- [ ] Deploy to production
 
 ---
 

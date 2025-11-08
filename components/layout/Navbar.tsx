@@ -11,8 +11,8 @@ export function Navbar() {
 
   return (
     <nav className="border-b bg-card shadow-sm">
-      <div className="container flex h-16 items-center justify-center gap-12">
-        <Link href="/" className="font-bold text-xl text-primary absolute left-4">
+      <div className="container flex h-16 items-center justify-between">
+        <Link href="/" className="font-bold text-xl text-primary">
           InvoiceMe
         </Link>
 
@@ -44,7 +44,7 @@ export function Navbar() {
           </div>
         )}
 
-        <div className="flex items-center gap-4 absolute right-4">
+        <div className="flex items-center gap-4">
           {isAuthenticated ? (
             <>
               <span className="text-sm text-muted-foreground">{user?.email}</span>

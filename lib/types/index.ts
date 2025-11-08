@@ -1,5 +1,5 @@
-// Core types re-exported from generated schema
-// These will be updated after FR-002
+// Core types matching backend DTOs
+// These match the backend API contract
 
 export interface Customer {
   id: string
@@ -30,7 +30,10 @@ export interface Invoice {
   status: "DRAFT" | "SENT" | "PAID"
   total: number
   balance: number
-  dueDate: string
+  discount: number
+  issuedDate?: string
+  dueDate?: string
+  notes?: string
   lineItems: InvoiceLineItem[]
   createdAt: string
   updatedAt: string
@@ -39,11 +42,15 @@ export interface Invoice {
 export interface CreateInvoiceRequest {
   customerId: string
   lineItems: InvoiceLineItem[]
-  dueDate: string
+  discount?: number
+  notes?: string
+  dueDate?: string
 }
 
 export interface UpdateInvoiceRequest {
   lineItems?: InvoiceLineItem[]
+  discount?: number
+  notes?: string
   dueDate?: string
 }
 
@@ -60,6 +67,8 @@ export interface Payment {
   invoiceId: string
   amount: number
   paymentMethod: "Cash" | "Card" | "Wire" | "ACH" | "Check" | "Other"
+  paymentDate: string
+  notes?: string
   createdAt: string
 }
 
@@ -67,6 +76,7 @@ export interface CreatePaymentRequest {
   invoiceId: string
   amount: number
   paymentMethod: Payment["paymentMethod"]
+  notes?: string
 }
 
 export interface PaginationMeta {

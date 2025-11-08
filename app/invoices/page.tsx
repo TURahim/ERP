@@ -11,6 +11,7 @@ import { useCustomers } from "@/lib/hooks/useCustomers"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
+import { Plus, Eye } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils/formatting"
 import type { Invoice } from "@/lib/types"
 
