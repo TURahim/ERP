@@ -1,0 +1,60 @@
+version: '3.8'
+
+# Full stack: PostgreSQL + Backend
+# Use this for local testing of the complete dockerized setup
+
+services:
+  postgres:
+    image: postgres:16
+    container_name: invoiceme-db-full
+    environment:
+      POSTGRES_DB: invoiceme
+      POSTGRES_USER: invoiceme_user
+      POSTGRES_PASSWORD: invoiceme_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_full:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U invoiceme_user -d invoiceme"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - invoiceme-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invoiceme-backend
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/invoiceme
+      SPRING_DATASOURCE_USERNAME: invoiceme_user
+      SPRING_DATASOURCE_PASSWORD: invoiceme_password
+      API_KEY: demo-api-key-12345
+      JAVA_OPTS: "-Xms256m -Xmx512m"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 3s
+      start_period: 60s
+      retries: 3
+    networks:
+      - invoiceme-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_full:
+    driver: local
+
+networks:
+  invoiceme-network:
+    driver: bridge
+

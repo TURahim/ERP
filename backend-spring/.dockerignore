@@ -1,0 +1,51 @@
+# Maven
+target/
+!target/erp-backend-*.jar
+.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# Environment files
+.env
+.env.*
+*.env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation (not needed in image)
+docs/
+README.md
+*.md
+
+# Docker
+docker-compose.yml
+Dockerfile
+.dockerignore
+
+# Test files
+src/test/
+
+# Misc
+*.bak
+*.swp
+*.swo
+*~
+
