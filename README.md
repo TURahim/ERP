@@ -1,11 +1,13 @@
-# InvoiceMe ERP - Frontend Documentation
+# InvoiceMe ERP - Full Stack Application
 
 ## Project Overview
 
-InvoiceMe ERP is a modern, full-featured invoice management system built with Next.js 14 and TypeScript. This is a premium financial application designed for businesses to manage customers, invoices, and payments with ease. The frontend is built with a complete mock API layer ready for backend integration.
+InvoiceMe ERP is a modern, full-featured invoice management system built with Next.js 16 (frontend) and Spring Boot (backend). This is a premium financial application designed for businesses to manage customers, invoices, and payments with ease.
 
-**Status**: Frontend Phase (v0) Complete - Ready for backend integration
-**Tech Stack**: Next.js 14 (App Router), React 19, TypeScript, TailwindCSS v4, React Query, React Hook Form, Zod
+**Status**: ✅ Production Ready - Deployed to AWS & Vercel
+**Frontend**: Next.js 16 (App Router), React 19, TypeScript, TailwindCSS v4, React Query, React Hook Form, Zod
+**Backend**: Spring Boot 3.2, Java 17, PostgreSQL, Docker
+**Infrastructure**: AWS RDS, Elastic Beanstalk, Vercel, CloudWatch
 
 ---
 
@@ -673,60 +675,301 @@ Remove after debugging with `// ` comment.
 
 ## Deployment
 
-### To Vercel
+### Production URLs
 
-\`\`\`bash
-npm run build
-vercel deploy
-\`\`\`
+| Component | URL | Status |
+|-----------|-----|--------|
+| **Frontend** | https://v0-ezd0tz8pp-trahim-8750s-projects.vercel.app | ✅ Live |
+| **Backend API** | http://invoiceme-prod.eba-up82v3qa.us-east-2.elasticbeanstalk.com | ✅ Live |
+| **Database** | RDS PostgreSQL (us-east-2) | ✅ Active |
 
-### Environment Variables on Vercel
+### Architecture
 
-1. Go to Vercel dashboard → Project → Settings → Environment Variables
-2. Add required `.env` variables
-3. Redeploy
+```
+┌─────────────────┐
+│   Vercel CDN    │  (Frontend - HTTPS)
+│   (Worldwide)   │
+└────────┬────────┘
+         │
+         ├─→ [CORS] 
+         │
+┌────────▼──────────────────────┐
+│   AWS Elastic Beanstalk       │  (Backend API - HTTP)
+│   - Auto-scaling (t3.micro)   │
+│   - Load Balancer             │
+│   - CloudWatch Monitoring     │
+└────────┬──────────────────────┘
+         │
+┌────────▼──────────────────────┐
+│   AWS RDS PostgreSQL          │
+│   - Multi-AZ capable          │
+│   - Automated backups (7 days)│
+│   - Encryption enabled        │
+└───────────────────────────────┘
+```
+
+### Full Deployment Documentation
+
+For comprehensive deployment information, see:
+- **Backend Deployment**: `backend-spring/docs/AWS_DEPLOYMENT.md`
+- **Frontend Deployment**: `docs/FRONTEND_DEPLOYMENT.md`
+- **Deployment Validation**: `docs/DEPLOYMENT_VALIDATION.md`
+- **Database Setup**: `backend-spring/docs/POSTGRES_SETUP.md`
+
+### Environment Variables (Production)
+
+**Frontend (Vercel):**
+```env
+NEXT_PUBLIC_USE_MOCK_API=false
+NEXT_PUBLIC_API_BASE_URL=https://invoiceme-prod.eba-up82v3qa.us-east-2.elasticbeanstalk.com
+NEXT_PUBLIC_API_KEY=prod-api-key-1762729910
+```
+
+**Backend (Elastic Beanstalk):**
+```env
+SPRING_PROFILES_ACTIVE=prod
+SPRING_DATASOURCE_URL=jdbc:postgresql://invoiceme-db.c1uuigcm4bd1.us-east-2.rds.amazonaws.com:5432/postgres
+SPRING_DATASOURCE_USERNAME=invoiceme_admin
+SPRING_DATASOURCE_PASSWORD=09nZ6sg399CVAvwP
+API_KEY=prod-api-key-1762729910
+SERVER_PORT=5000
+```
+
+### Deploying to Production
+
+**Frontend (Vercel):**
+```bash
+# Already deployed - auto-deploys on git push to main
+vercel --prod
+```
+
+**Backend (AWS Elastic Beanstalk):**
+```bash
+cd backend-spring
+./mvnw clean package -DskipTests
+aws s3 cp target/erp-backend-0.0.1-SNAPSHOT.jar s3://invoiceme-eb-deployments-us-east-2/
+aws elasticbeanstalk create-application-version --application-name invoiceme --version-label vX.X.X --source-bundle ...
+```
 
 ### Pre-deployment Checklist
 
-- [ ] All protected routes properly wrapped
-- [ ] Environment variables configured
-- [ ] Build succeeds: `npm run build`
-- [ ] No TypeScript errors: `npm run type-check`
-- [ ] Test login/signup flow
-- [ ] Test protected routes redirect properly
+- [x] All protected routes properly wrapped
+- [x] Environment variables configured
+- [x] Build succeeds: `npm run build`
+- [x] Backend tests pass
+- [x] Login/signup flow tested
+- [x] Protected routes redirect properly
+- [x] CSV export functionality working
+- [x] Demo account auto-login working
+- [x] Database migrations verified
+- [x] CloudWatch monitoring enabled
 
 ---
 
-## Backend Integration Status
+## Features
 
-✅ **Backend Integration Complete!**
+### ✅ Complete Feature Set
 
-The frontend is now fully integrated with the backend API. You can switch between mock and real API modes using environment variables.
+**Authentication & Authorization**
+- User registration and login
+- Email-based authentication
+- Session management with localStorage
+- Protected routes with automatic redirects
+- Demo account with auto-login
+
+**Customer Management**
+- Create, read, update, delete (CRUD) customers
+- Customer search and filtering
+- Export customers to CSV
+- Bulk operations ready
+
+**Invoice Management**
+- Create and manage invoices
+- Draft, send, and paid status tracking
+- Line items with quantity and unit price
+- Automatic balance calculation
+- Invoice detail view with full history
+- Export invoices to CSV
+
+**Payment Processing**
+- Record payments against invoices
+- Multiple payment method support
+- Automatic balance updates
+- Payment history tracking
+
+**Dashboard & Reporting**
+- Real-time metrics (customers, invoices, outstanding balance)
+- Financial overview
+- CSV exports for data analysis
+
+### Backend Integration Status
+
+✅ **Full Stack Integration Complete!**
+
+The frontend is now fully integrated with the Spring Boot backend. Both mock and real API modes are supported.
 
 ### What's Integrated
 
-- ✅ Customer CRUD operations
-- ✅ Invoice CRUD operations  
-- ✅ Invoice lifecycle (send invoice)
-- ✅ Payment recording
+- ✅ Customer CRUD operations (local & production)
+- ✅ Invoice CRUD operations (local & production)
+- ✅ Invoice lifecycle (send invoice, status updates)
+- ✅ Payment recording with balance tracking
 - ✅ Real-time balance updates
 - ✅ Error handling for backend errors
 - ✅ Automatic service switching (mock ↔ real)
+- ✅ API key authentication
+- ✅ CORS support
+- ✅ CSV export for customers & invoices
+- ✅ Demo account with mock data
 
-### Testing with Real Backend
+### Testing the Application
 
-1. Start the backend server (see backend README)
-2. Set `NEXT_PUBLIC_USE_MOCK_API=false` in `.env.local`
-3. Restart the frontend dev server
-4. Test all CRUD operations - they now use the real backend!
+**Local Testing:**
+```bash
+# 1. Start PostgreSQL
+cd backend-spring
+docker compose up -d
+
+# 2. Start backend
+./scripts/run-prod.sh
+
+# 3. In new terminal, start frontend
+cd ../ERP
+npm run dev
+
+# 4. Seed demo data
+npm run seed:demo
+
+# 5. Open browser
+open http://localhost:3001
+```
+
+**Production Testing:**
+```bash
+# Visit frontend
+open https://v0-ezd0tz8pp-trahim-8750s-projects.vercel.app
+
+# Test API directly
+curl -H "X-API-Key: prod-api-key-1762729910" \
+  http://invoiceme-prod.eba-up82v3qa.us-east-2.elasticbeanstalk.com/api/customers
+```
 
 ### Next Steps
 
-- [ ] Add end-to-end tests (INT-020)
-- [ ] Set up CI/CD pipeline
-- [ ] Deploy to production
+- [ ] Enable HTTPS on backend (ACM certificate)
+- [ ] Add end-to-end tests
+- [ ] Set up automated CI/CD pipeline
+- [ ] Implement database migrations (Flyway)
+- [ ] Add APM monitoring (New Relic/Datadog)
+- [ ] Configure custom domain
+- [ ] Set up alert notifications
 
 ---
+
+## Repository Structure
+
+```
+invoiceme-erp/
+├── app/                          # Frontend (Next.js)
+│   ├── (auth)/                   # Authentication pages
+│   ├── api/                      # API proxy routes
+│   ├── dashboard/                # Dashboard page
+│   ├── customers/                # Customer pages
+│   ├── invoices/                 # Invoice pages
+│   └── layout.tsx                # Root layout
+│
+├── components/                   # React components
+│   ├── layout/                   # Layout components
+│   ├── auth/                     # Authentication components
+│   ├── forms/                    # Form components
+│   └── ui/                       # shadcn/ui components
+│
+├── lib/                          # Application logic
+│   ├── contexts/                 # React contexts
+│   ├── hooks/                    # Custom hooks
+│   ├── services/                 # API services
+│   ├── types/                    # TypeScript types
+│   └── utils/                    # Utility functions
+│
+├── scripts/                      # Utility scripts
+│   ├── seed-demo-data.ts         # Demo data seeding
+│   ├── test-backend-connection.js
+│   └── smoke-test-prod.sh        # Production smoke test
+│
+├── docs/                         # Documentation
+│   ├── BACKEND_SETUP.md          # Backend setup guide
+│   ├── DEPLOYMENT_SUMMARY.md     # Deployment overview
+│   ├── DEPLOYMENT_VALIDATION.md  # Production validation
+│   ├── FRONTEND_DEPLOYMENT.md    # Frontend deployment
+│   └── README.md                 # This file
+│
+├── backend-spring/               # Backend (Spring Boot)
+│   ├── src/main/java/            # Java source code
+│   │   └── com/invoiceme/erp/
+│   │       ├── controller/       # REST controllers
+│   │       ├── service/          # Business logic
+│   │       ├── repository/       # Data access
+│   │       ├── model/            # JPA entities
+│   │       ├── dto/              # Data transfer objects
+│   │       ├── config/           # Configuration
+│   │       └── exception/        # Exception handling
+│   │
+│   ├── src/main/resources/       # Configuration files
+│   │   ├── application.properties
+│   │   └── application-prod.properties
+│   │
+│   ├── docs/                     # Backend documentation
+│   │   ├── AWS_DEPLOYMENT.md
+│   │   ├── DATABASE_MIGRATIONS.md
+│   │   ├── GETTING_STARTED.md
+│   │   ├── OBSERVABILITY.md
+│   │   ├── POSTGRES_SETUP.md
+│   │   ├── SMOKE_TEST_CHECKLIST.md
+│   │   └── TESTING_GUIDE.md
+│   │
+│   ├── scripts/                  # Backend scripts
+│   │   ├── run-dev.sh            # Run with H2
+│   │   ├── run-prod.sh           # Run with PostgreSQL
+│   │   └── build-docker.sh       # Build Docker image
+│   │
+│   ├── Dockerfile                # Production image
+│   ├── docker-compose.yml        # Local PostgreSQL
+│   ├── docker-compose-full.yml   # Full stack locally
+│   ├── pom.xml                   # Maven configuration
+│   └── README.md                 # Backend README
+│
+├── .env.example                  # Environment template
+├── .env.local                    # Local development (git ignored)
+├── .gitignore                    # Git ignore rules
+├── package.json                  # Frontend dependencies
+├── tsconfig.json                 # TypeScript config
+├── next.config.mjs               # Next.js config
+└── README.md                     # This file
+```
+
+## Quick Links
+
+### Getting Started
+- [Frontend Getting Started](#getting-started)
+- [Backend Setup](backend-spring/docs/GETTING_STARTED.md)
+- [Local Development](#environment-variables)
+
+### Deployment
+- [Vercel Deployment](docs/FRONTEND_DEPLOYMENT.md)
+- [AWS Deployment](backend-spring/docs/AWS_DEPLOYMENT.md)
+- [Production URLs](#production-urls)
+
+### Documentation
+- [Frontend Architecture](#architecture--design-patterns)
+- [Backend README](backend-spring/README.md)
+- [Database Setup](backend-spring/docs/POSTGRES_SETUP.md)
+- [Testing Guide](backend-spring/docs/TESTING_GUIDE.md)
+- [Deployment Validation](docs/DEPLOYMENT_VALIDATION.md)
+
+### APIs
+- [Mock API](lib/services/mockApi.ts)
+- [Real API (Backend)](backend-spring/src/main/java/com/invoiceme/erp/controller/)
+- [Frontend Hooks](#key-hooks--utilities)
 
 ## Support & Resources
 
@@ -735,9 +978,34 @@ The frontend is now fully integrated with the backend API. You can switch betwee
 - **TailwindCSS v4**: https://tailwindcss.com/docs
 - **shadcn/ui**: https://ui.shadcn.com
 - **TypeScript**: https://www.typescriptlang.org/docs
+- **Spring Boot**: https://spring.io/projects/spring-boot
+- **PostgreSQL**: https://www.postgresql.org/docs/
+- **AWS Documentation**: https://docs.aws.amazon.com/
 
 ---
 
 ## License
 
 [Add your license here]
+
+---
+
+## Contributing
+
+Please follow these guidelines:
+1. Create feature branches from `main`
+2. Write descriptive commit messages
+3. Test locally before pushing
+4. Submit PRs with clear descriptions
+
+---
+
+## Support
+
+For issues or questions:
+1. Check the relevant documentation file
+2. Review the GitHub Issues
+3. Check the deployment validation checklist
+
+**Last Updated**: November 9, 2025
+**Version**: 1.0.0 (Production Release)
