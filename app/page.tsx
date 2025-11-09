@@ -1,12 +1,37 @@
 "use client"
 
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useAuth } from "@/lib/contexts/auth-context"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, TrendingUp, Users, FileText } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
+import { useState } from "react"
 
 export default function HomePage() {
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, loginAsDemo } = useAuth()
+  const router = useRouter()
+  const { toast } = useToast()
+  const [isDemoLoading, setIsDemoLoading] = useState(false)
+
+  async function handleViewDemo() {
+    setIsDemoLoading(true)
+    try {
+      await loginAsDemo()
+      toast({
+        title: "Demo Mode Activated",
+        description: "You've been logged in as a demo user. Explore the platform with sample data!",
+      })
+      router.push("/dashboard")
+    } catch (error) {
+      toast({
+        title: "Demo Login Failed",
+        description: error instanceof Error ? error.message : "Please try again",
+        variant: "destructive",
+      })
+      setIsDemoLoading(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background via-background to-muted">
@@ -31,8 +56,13 @@ export default function HomePage() {
                 <ArrowRight className="w-4 h-4" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline">
-              <Link href="/customers">View Demo</Link>
+            <Button 
+              size="lg" 
+              variant="outline" 
+              onClick={handleViewDemo}
+              disabled={isDemoLoading || isAuthenticated}
+            >
+              {isDemoLoading ? "Loading Demo..." : "View Demo"}
             </Button>
           </div>
         </div>

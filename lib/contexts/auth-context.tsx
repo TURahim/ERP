@@ -13,6 +13,7 @@ export interface AuthContextType {
   isLoading: boolean
   login: (email: string, password: string) => Promise<void>
   signup: (email: string, password: string, name: string) => Promise<void>
+  loginAsDemo: () => Promise<void>
   logout: () => void
   isAuthenticated: boolean
 }
@@ -80,6 +81,21 @@ export function AuthProvider({ children }: PropsWithChildren) {
     localStorage.setItem("auth_user", JSON.stringify(newUser))
   }, [])
 
+  const loginAsDemo = useCallback(async () => {
+    // Demo account credentials - uses mock API data
+    const demoUser: User = {
+      id: "demo_user_001",
+      email: "demo@invoiceme.com",
+      name: "Demo User",
+    }
+
+    // Simulate network delay
+    await new Promise((resolve) => setTimeout(resolve, 300))
+
+    setUser(demoUser)
+    localStorage.setItem("auth_user", JSON.stringify(demoUser))
+  }, [])
+
   const logout = useCallback(() => {
     setUser(null)
     localStorage.removeItem("auth_user")
@@ -92,6 +108,7 @@ export function AuthProvider({ children }: PropsWithChildren) {
         isLoading,
         login,
         signup,
+        loginAsDemo,
         logout,
         isAuthenticated: !!user,
       }}

@@ -38,9 +38,11 @@ export function Navbar() {
                 Invoices
               </Link>
             </div>
-            <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
-              Demo Mode
-            </Badge>
+            {user?.email === "demo@invoiceme.com" && (
+              <Badge variant="outline" className="bg-accent/10 text-accent border-accent/20">
+                Demo Mode
+              </Badge>
+            )}
           </div>
         )}
 

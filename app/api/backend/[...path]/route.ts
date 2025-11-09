@@ -1,7 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
 
-const API_BASE_URL = process.env.API_BASE_URL ?? "http://localhost:8080"
-const API_KEY = process.env.API_KEY ?? "demo-api-key-12345"
+// Server-side environment variables (not exposed to client)
+// These should be set in .env.local for development
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || process.env.API_BASE_URL || "http://localhost:8080"
+const API_KEY = process.env.NEXT_PUBLIC_API_KEY || process.env.API_KEY || "demo-api-key-12345"
 
 async function proxy(request: NextRequest, init: RequestInit = {}) {
   const url = new URL(request.url)

@@ -11,8 +11,10 @@ import { useCustomers } from "@/lib/hooks/useCustomers"
 import { StatusBadge } from "@/components/ui/status-badge"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Plus, Eye } from "lucide-react"
+import { Plus, Eye, Download } from "lucide-react"
 import { formatCurrency, formatDate } from "@/lib/utils/formatting"
+import { exportInvoicesToCsv } from "@/lib/utils/csv"
+import { useToast } from "@/hooks/use-toast"
 import type { Invoice } from "@/lib/types"
 
 export default function InvoicesPage() {
@@ -22,13 +24,41 @@ export default function InvoicesPage() {
     status: statusFilter === "ALL" ? undefined : statusFilter,
     customerId: customerFilter === "ALL" ? undefined : customerFilter,
     page: 0,
-    size: 20,
+    size: 1000, // Fetch more for export
   })
   const { data: customersData } = useCustomers({ includeInactive: false })
+  const { toast } = useToast()
 
   const invoices = invoicesData?.data ?? []
   const customers = customersData?.data ?? []
   const pagination = invoicesData?.pagination
+
+  const handleExportCsv = () => {
+    if (invoices.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "There are no invoices to export.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      // Create customer name map for better CSV readability
+      const customerMap = new Map(customers.map((c) => [c.id, c.name]))
+      exportInvoicesToCsv(invoices, customerMap)
+      toast({
+        title: "Export successful",
+        description: `Exported ${invoices.length} invoice(s) to CSV`,
+      })
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export invoices. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (isLoading) return <TableSkeleton />
 
@@ -40,10 +70,18 @@ export default function InvoicesPage() {
             <h1 className="text-3xl font-bold">Invoices</h1>
             <p className="text-muted-foreground mt-2">Manage and track all your invoices</p>
           </div>
-          <Button size="lg" className="gap-2">
-            <Plus className="w-4 h-4" />
-            <Link href="/invoices/new">Create Invoice</Link>
-          </Button>
+          <div className="flex gap-3">
+            {invoices.length > 0 && (
+              <Button size="lg" variant="outline" className="gap-2" onClick={handleExportCsv}>
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
+            )}
+            <Button size="lg" className="gap-2">
+              <Plus className="w-4 h-4" />
+              <Link href="/invoices/new">Create Invoice</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-4 mb-8 p-4 bg-muted/40 rounded-lg border border-border">

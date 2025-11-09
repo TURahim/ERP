@@ -13,15 +13,16 @@ import type {
 } from "@/lib/types"
 
 // Create axios instance with base configuration
+// Uses Next.js proxy route to avoid exposing API keys to the client
 function createApiClient(): AxiosInstance {
-  const baseURL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8080"
-  const apiKey = process.env.NEXT_PUBLIC_API_KEY || "demo-api-key-12345"
+  // Use the Next.js proxy route instead of calling backend directly
+  // This keeps API keys server-side only
+  const baseURL = "/api/backend"
 
   const client = axios.create({
     baseURL,
     headers: {
       "Content-Type": "application/json",
-      "X-API-Key": apiKey,
     },
   })
 

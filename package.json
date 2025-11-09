@@ -9,7 +9,8 @@
     "start": "next start",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "seed:demo": "npx tsx scripts/seed-demo-data.ts"
+    "seed:demo": "npx tsx scripts/seed-demo-data.ts",
+    "test:backend": "node scripts/test-backend-connection.js"
   },
   "dependencies": {
     "@hookform/resolvers": "latest",

@@ -9,14 +9,42 @@ import { Badge } from "@/components/ui/badge"
 import { useCustomers } from "@/lib/hooks/useCustomers"
 import { TableSkeleton } from "@/components/ui/table-skeleton"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Plus, Edit2, Eye } from "lucide-react"
+import { Plus, Edit2, Eye, Download } from "lucide-react"
+import { exportCustomersToCsv } from "@/lib/utils/csv"
+import { useToast } from "@/hooks/use-toast"
 
 export default function CustomersPage() {
   const [includeInactive, setIncludeInactive] = useState(false)
-  const { data, isLoading } = useCustomers({ includeInactive, page: 0, size: 20 })
+  const { data, isLoading } = useCustomers({ includeInactive, page: 0, size: 1000 }) // Fetch more for export
+  const { toast } = useToast()
 
   const customers = data?.data ?? []
   const pagination = data?.pagination
+
+  const handleExportCsv = () => {
+    if (customers.length === 0) {
+      toast({
+        title: "No data to export",
+        description: "There are no customers to export.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      exportCustomersToCsv(customers)
+      toast({
+        title: "Export successful",
+        description: `Exported ${customers.length} customer(s) to CSV`,
+      })
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Failed to export customers. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
 
   if (isLoading) return <TableSkeleton />
 
@@ -28,10 +56,18 @@ export default function CustomersPage() {
             <h1 className="text-3xl font-bold">Customers</h1>
             <p className="text-muted-foreground mt-2">Manage and track all your customer information</p>
           </div>
-          <Button size="lg" className="gap-2">
-            <Plus className="w-4 h-4" />
-            <Link href="/customers/new">Create Customer</Link>
-          </Button>
+          <div className="flex gap-3">
+            {customers.length > 0 && (
+              <Button size="lg" variant="outline" className="gap-2" onClick={handleExportCsv}>
+                <Download className="w-4 h-4" />
+                Export CSV
+              </Button>
+            )}
+            <Button size="lg" className="gap-2">
+              <Plus className="w-4 h-4" />
+              <Link href="/customers/new">Create Customer</Link>
+            </Button>
+          </div>
         </div>
 
         <div className="flex items-center gap-3 mb-8 p-4 bg-muted/40 rounded-lg border border-border">

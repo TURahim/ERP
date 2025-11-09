@@ -1,6 +1,6 @@
 "use client"
 
-import { type PropsWithChildren, createContext, useContext } from "react"
+import { type PropsWithChildren, createContext, useContext, useMemo } from "react"
 import type {
   Customer,
   Invoice,
@@ -14,6 +14,7 @@ import type {
 } from "@/lib/types"
 import { mockServices } from "@/lib/services/mockApi"
 import { realServices } from "@/lib/services/realApi"
+import { useAuth } from "@/lib/contexts/auth-context"
 
 export interface CustomerService {
   list(params: { page: number; size: number; includeInactive?: boolean }): Promise<ApiResponse<Customer[]>>
@@ -61,8 +62,11 @@ export function useService<Name extends keyof ServiceRegistry>(name: Name): Serv
 // This component must be used in client components to avoid passing functions from server to client
 export function ServiceProviderWrapper({ children }: PropsWithChildren) {
   // Check if we should use mock API or real API
-  const useMockApi = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
-  const services = useMockApi ? mockServices : realServices
+  const { user } = useAuth()
+  const envUseMock = process.env.NEXT_PUBLIC_USE_MOCK_API === "true"
+  const shouldUseMock = envUseMock || user?.email === "demo@invoiceme.com"
+
+  const services = useMemo(() => (shouldUseMock ? mockServices : realServices), [shouldUseMock])
 
   return <ServiceContext.Provider value={services}>{children}</ServiceContext.Provider>
 }
